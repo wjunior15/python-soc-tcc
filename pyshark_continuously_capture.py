@@ -336,6 +336,10 @@ def main():
         print("Erro na captura:", str(e))
         print("     ------- Traceback Completo do ERRO:")
         traceback.print_exc()
+    
+    except KeyboardInterrupt:
+        print_end_time(init_exec_time)
+        print(" --- EXECUÇÃO INTERROMPIDA PELO USUÁRIO")
 
 
 if __name__ == '__main__':
