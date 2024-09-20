@@ -263,17 +263,46 @@ def get_benign_pcaps(in_arr_data_rna):
     print("  --- BENIGN PCAP ---")
     queries.update_status_captures(in_arr_data_rna[0]['Source'], in_arr_data_rna[0]['Destiny'], in_arr_data_rna[0]['Timestamp'], "BENIGN", None)
 
+def get_model_number():
+    """
+    Função que faz a validação da entrada de dados do usuário para seleção do tipo de modelo a ser carregado.
+        
+    Returns:
+        int_number (int): Número do modelo que será carregado
+    """
+    range_modelos = range(1,5)
+    int_number = int(input("Type model and encoder number [1-4]: "))
+    if int_number in range_modelos:
+        return int_number
+    print("Número de modelo indisponível - Insira um número dentro do range: ",range_modelos)
+    get_model_number()
+
+def get_model_and_encoder():
+    """
+    Função que faz a importação dos modelos de RNA e encoder de dados.
+        
+    Returns:
+        le (encoder): Modelo de encoder de dados pré-treinado.
+        model (tf_model): Modelo pré-treinado do tensorflow.
+    """
+    
+    int_number = get_model_number()
+    print(" --- Número selecionado:",int_number)
+    le_path = config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["encoder"]
+    model_path = config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["model"]
+    
+    le = import_encoder(le_path)
+    print(" --- Encoder de dados importado com sucesso!")
+    model = import_tf_model(model_path)
+    print(" --- Modelo TF importado com sucesso!")
+    
+    return le, model
 
 def main():
     try:
         init_exec_time = int(time.time())
-        
-        
-        le = import_encoder(config.PATH_ACTIVE_ENCODER)
-        print(" --- Encoder de dados importado com sucesso!")
-        model = import_tf_model(config.PATH_ACTIVE_MODEL)
-        print(" --- Modelo TF importado com sucesso!")
-
+        print("     ---- INICIA PYTHON SOC ----")
+        le, model = get_model_and_encoder()
         print(" --- Inicia Coleta de PCAPs")
         capture = pyshark.LiveCapture(interface=config.PYSHARK_CAPTURE_INTERFACE)
         for pcap in capture.sniff_continuously():
