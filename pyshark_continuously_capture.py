@@ -10,8 +10,6 @@ import queries
 import time
 import pyshark
 import traceback
-from datetime import datetime
-import clear_db
 
 def import_tf_model(in_model_path):
     """
@@ -305,10 +303,6 @@ def main():
         print(" --- Inicia Coleta de PCAPs")
         capture = pyshark.LiveCapture(interface=config.PYSHARK_CAPTURE_INTERFACE)
         for pcap in capture.sniff_continuously():
-            
-            if int(datetime.now().hour) in [4,16] and int(datetime.now().minute) == 0:
-                clear_db.invoke_clear(config.BOOL_CLEAR_ALL_DB)
-                
             if 'IP' in pcap and 'TCP' in pcap:
                 list_pcap = get_pcap_data(pcap, int(init_exec_time))
                 
