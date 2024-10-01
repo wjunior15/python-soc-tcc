@@ -233,9 +233,9 @@ def predict_with_model(in_list_data_rna, in_model, in_le):
     Returns:
         out_arr_predict_decode (np.array): List de retorno do modelo já decodificados para análise
     """
-    arr_data_to_model = build_data_to_model_format(arr_data=in_list_data_rna, dict_maxValues=config.DICT_MAX_VALUES)
+    arr_data_to_model = build_data_to_model_format(in_arr_data=in_list_data_rna, in_dict_maxValues=config.DICT_MAX_VALUES)
     arr_predict = in_model.predict(arr_data_to_model)
-    out_arr_predict_decode = decoder_data(le=in_le, predictions=arr_predict)
+    out_arr_predict_decode = decoder_data(in_le=in_le, in_predictions=arr_predict)
     return out_arr_predict_decode
 
 def get_malign_pcaps(in_item_predict_decode, in_arr_data_rna):
