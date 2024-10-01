@@ -175,55 +175,54 @@ def get_model_attributes_by_pcap_data(pcap, raw_data, timestamp_zero):
         out_list_rna = [data_rna]
         return out_list_rna
 
-def decoder_data(le, predictions):
+def decoder_data(in_le, in_predictions):
     """
     Realiza a decodificação dos dados retornados pelo modelo.
     
     Args:
-        le (LabelEncoder): Modelo de Encoder pré-treinado e importado para uso.
-        predictions (np.array): Array de dados retornados pelo modelo tf.
+        in_le (LabelEncoder): Modelo de Encoder pré-treinado e importado para uso.
+        in_predictions (np.array): Array de dados retornados pelo modelo tf.
     Returns:
-        arrDecodedLabelsPredict (np.array): Array de dados decodificados pelo LabelEncoder.
+        out_arr_decoded_labels (np.array): Array de dados decodificados pelo LabelEncoder.
     """
-    listNewValues = []
-    for item in predictions:
-        listNewValues.append(np.argmax(item))
+    list_argmax = []
+    for item in in_predictions:
+        list_argmax.append(np.argmax(item))
         
-    arrEncodedLabels = np.array(listNewValues)
-    #print("Shape arrEncoded:",arrEncodedLabels.shape)
-    arrDecodedLabelsPredict = le.inverse_transform(arrEncodedLabels)
-    return arrDecodedLabelsPredict
+    arr_encoded_labels = np.array(list_argmax)
+    out_arr_decoded_labels = in_le.inverse_transform(arr_encoded_labels)
+    return out_arr_decoded_labels
 
-def normalize_data_column(column, maxValue):
+def normalize_data_column(in_column, in_maxValue):
     """
     Função que normaliza todos os dados de uma coluna
     
     Args:
-        column (dataframe_column): Coluna que será normalizada
-        maxValue (int): Valor máximo da coluna utilizado para normalização
+        in_column (dataframe_column): Coluna que será normalizada
+        in_maxValue (int): Valor máximo da coluna utilizado para normalização
     Returns:
-        column_norm (dataframe_column): Coluna normalizada
+        out_column_normalized (dataframe_column): Coluna normalizada
     """
-    return column/maxValue
+    return in_column/in_maxValue
 
-def build_data_to_model_format(arr_data, dict_maxValues):
+def build_data_to_model_format(in_arr_data, in_dict_maxValues):
     """
     Função que extrai os dados que serão utilizados no modelo RNA
     
     Args:
-        arr_data (list): Lista de dados a serem utilizados no modelo
-        dict_maxValues (dict): Dict de valores máximos para serem utilizados para normalização dos dados
+        in_arr_data (list): Lista de dados a serem utilizados no modelo
+        in_dict_maxValues (dict): Dict de valores máximos para serem utilizados para normalização dos dados
     Returns:
-        dt_data (np.array): Array de dados pronto para uso no modelo tf
+        out_dt_data (np.array): Array de dados pronto para uso no modelo tf
     """
-    dt_data = pd.DataFrame.from_dict(arr_data)
+    dt_data = pd.DataFrame.from_dict(in_arr_data)
     dt_data.drop(labels=["Label", "Source", "Destiny", "Timestamp"], axis=1, inplace=True)
     
     for c in dt_data.columns:
-        dt_data[c] = normalize_data_column(dt_data[c], dict_maxValues[c])
+        dt_data[c] = normalize_data_column(dt_data[c], in_dict_maxValues[c])
     dt_data.fillna(value=0, inplace=True)
-    dt_data = dt_data.to_numpy()
-    return dt_data
+    out_dt_data = dt_data.to_numpy()
+    return out_dt_data
 
 def predict_with_model(in_list_data_rna, in_model, in_le):
     """
@@ -282,8 +281,8 @@ def get_model_and_encoder():
     Função que faz a importação dos modelos de RNA e encoder de dados.
         
     Returns:
-        le (encoder): Modelo de encoder de dados pré-treinado.
-        model (tf_model): Modelo pré-treinado do tensorflow.
+        out_le (encoder): Modelo de encoder de dados pré-treinado.
+        out_model (tf_model): Modelo pré-treinado do tensorflow.
     """
     
     int_number = get_model_number()
@@ -291,12 +290,12 @@ def get_model_and_encoder():
     le_path = config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["encoder"]
     model_path = config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["model"]
     
-    le = import_encoder(le_path)
+    out_le = import_encoder(le_path)
     print(" --- Encoder de dados importado com sucesso!")
-    model = import_tf_model(model_path)
+    out_model = import_tf_model(model_path)
     print(" --- Modelo TF importado com sucesso!")
     
-    return le, model
+    return out_le, out_model
 
 def main():
     try:
@@ -315,6 +314,10 @@ def main():
                 
                 if list_pcap:
                     queries.insert_pcap_data(list_pcap)
+                    #No analyse if this is sync pcap - Infinity error in pck/s 
+                    if list_pcap[5] == 1:
+                        continue
+                    
                     name_list, value_list, condition_list, and_or = define_list_to_query_by_att(list_pcap[0], list_pcap[1])
                     raw_data = queries.get_captures_by_attribute_list(name_list, value_list, condition_list, and_or)
                     list_data_rna = get_model_attributes_by_pcap_data(list_pcap, raw_data, init_exec_time)
