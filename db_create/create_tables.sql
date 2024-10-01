@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS alerts, captures;
+
 CREATE TABLE captures(
     ip_src varchar(50) NOT NULL,
     ip_dst varchar(50) NOT NULL,
