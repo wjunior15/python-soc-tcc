@@ -10,6 +10,7 @@ import queries
 import time
 import pyshark
 import traceback
+import clear_db
 
 def import_tf_model(in_model_path):
     """
@@ -299,6 +300,7 @@ def main():
     try:
         init_exec_time = int(time.time())
         print("     ---- INICIA PYTHON SOC ----")
+        clear_db.clear_all()
         le, model = get_model_and_encoder()
         print(" --- Inicia Coleta de PCAPs")
         capture = pyshark.LiveCapture(interface=config.PYSHARK_CAPTURE_INTERFACE)

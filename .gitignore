@@ -1,10 +1,12 @@
 /venv/
 /__pycache__/
 /junk/
-config.py
 process_data_pcaps.py
 pyshark_capture.py
 run_analyse.py
 sub_process_tcpdump.py
 definicoes_variaveis_modelo_rna.txt
 analyse_data.ipynb
+.env
+Dockerfile
+docker-compose.yml
