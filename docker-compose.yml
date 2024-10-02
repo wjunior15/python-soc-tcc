@@ -10,11 +10,11 @@ services:
       APP_ENV: "dev"
       APP_DEBUG: "False"
       APP_PORT: 5000
-      POSTGRES_DB: fazenda
-      POSTGRES_USER: docker
-      POSTGRES_PASSWORD: docker
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_HOST: ${DB_HOST}
+      POSTGRES_PORT: ${DB_PORT}
     volumes:
       - appdata:/var/www
     depends_on:
@@ -30,9 +30,9 @@ services:
     ports:
       - '5432:5432'
     environment:
-      - POSTGRES_USER=docker
-      - POSTGRES_PASSWORD=docker
-      - POSTGRES_DB=fazenda
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
     volumes:
       - fazenda_pg_data:/bitnami/postgresql
     networks:
