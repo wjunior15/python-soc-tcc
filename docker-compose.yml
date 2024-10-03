@@ -1,4 +1,22 @@
 services:
+
+  pcap-reader:
+    image: python:3.9-slim
+    container_name: pcap-reader
+    volumes:
+      - ./app:/usr/src/app        # Monta o diretório local 'app' dentro do container
+      - ./soc:/usr/src/soc    # Monta o diretório com os arquivos PCAP
+    working_dir: /usr/src/soc
+    command: python3 pcap_reader.py  # Executa o script Python de leitura de PCAPs
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    depends_on:
+      - db
+
   flask:
     build:
       context: .

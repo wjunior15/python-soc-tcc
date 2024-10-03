@@ -3,10 +3,10 @@ import os
 dotenv.load_dotenv()
 
 DICT_ACTIVE_MODEL_AND_ENCODER = {
-                                    1:{"model":"models/Rede1_15Labels.keras", "encoder":"encoders/LabelEncoder.joblib"},
-                                    2:{"model":"models/Rede2_2Labels.keras", "encoder":"encoders/LabelEncoder2.joblib"},
-                                    3:{"model":"models/Rede3_15Labels.keras", "encoder":"encoders/LabelEncoder3.joblib"},
-                                    4:{"model":"models/Rede4_2Labels.keras", "encoder":"encoders/LabelEncoder4.joblib"}
+                                    1:{"model":"soc/models/Rede1_15Labels.keras", "encoder":"soc/encoders/LabelEncoder.joblib"},
+                                    2:{"model":"soc/models/Rede2_2Labels.keras", "encoder":"soc/encoders/LabelEncoder2.joblib"},
+                                    3:{"model":"soc/models/Rede3_15Labels.keras", "encoder":"soc/encoders/LabelEncoder3.joblib"},
+                                    4:{"model":"soc/models/Rede4_2Labels.keras", "encoder":"soc/encoders/LabelEncoder4.joblib"}
                                 }
 DICT_MAX_VALUES = {
                     'Init_Win_bytes_forward': 65535,
