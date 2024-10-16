@@ -1,16 +1,16 @@
 import pandas as pd
 import numpy as np
-import tensorflow as tf
 import keras
 import joblib
 from sklearn.preprocessing import LabelEncoder
+import tensorflow as tf
 import subprocess as sub
 import config
 import queries
 import time
 import pyshark
 import traceback
-import clear_db
+import os
 
 def import_tf_model(in_model_path):
     """
@@ -284,11 +284,10 @@ def get_model_and_encoder():
         out_model (tf_model): Modelo pré-treinado do tensorflow.
     """
     
-    int_number = get_model_number()
+    int_number = 1 #get_model_number()
     print(" --- Número selecionado:",int_number)
-    le_path = config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["encoder"]
-    model_path = config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["model"]
-    
+    le_path = os.getcwd()+config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["encoder"]
+    model_path = os.getcwd()+config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["model"]
     out_le = import_encoder(le_path)
     print(" --- Encoder de dados importado com sucesso!")
     out_model = import_tf_model(model_path)
@@ -299,11 +298,15 @@ def get_model_and_encoder():
 def main():
     try:
         init_exec_time = int(time.time())
-        print("     ---- INICIA PYTHON SOC ----")
-        clear_db.clear_all()
+        
+        print("     ---- INICIA PYTHON SOC",config.CODE_VERSION, "---- Cria banco de dados")
+        queries.create_db()
+        
         le, model = get_model_and_encoder()
+        
         print(" --- Inicia Coleta de PCAPs")
-        capture = pyshark.LiveCapture(interface=config.PYSHARK_CAPTURE_INTERFACE)
+        capture = pyshark.LiveCapture(interface=config.PYSHARK_CAPTURE_INTERFACE, bpf_filter=f'host {config.PYSHARK_HOST}')
+        
         for pcap in capture.sniff_continuously():
             if 'IP' in pcap and 'TCP' in pcap:
                 list_pcap = get_pcap_data(pcap, int(init_exec_time))
@@ -327,19 +330,16 @@ def main():
                             continue
                         
                         get_benign_pcaps(list_data_rna)
-                        
-        print_end_time(init_exec_time)
         
     except Exception as e:
-        print_end_time(init_exec_time)
         print("Erro na captura:", str(e))
-        print("     ------- Traceback Completo do ERRO:")
+        print("     ------- Traceback Completo do ERRO -------")
         traceback.print_exc()
     
     except KeyboardInterrupt:
-        print_end_time(init_exec_time)
-        print(" --- EXECUÇÃO INTERROMPIDA PELO USUÁRIO")
+        print(" --- EXECUÇÃO INTERROMPIDA PELO USUÁRIO ---")
 
+    print_end_time(init_exec_time)
 
 if __name__ == '__main__':
     main()

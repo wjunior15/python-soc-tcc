@@ -1,12 +1,17 @@
-import dotenv
 import os
-dotenv.load_dotenv()
+import platform
 
+if platform.system() == 'Windows':
+    import dotenv
+    dotenv.load_dotenv()
+    
+PROJECT_PATH = os.getcwd()
+PYSHARK_HOST = "app"
 DICT_ACTIVE_MODEL_AND_ENCODER = {
-                                    1:{"model":"soc/models/Rede1_15Labels.keras", "encoder":"soc/encoders/LabelEncoder.joblib"},
-                                    2:{"model":"soc/models/Rede2_2Labels.keras", "encoder":"soc/encoders/LabelEncoder2.joblib"},
-                                    3:{"model":"soc/models/Rede3_15Labels.keras", "encoder":"soc/encoders/LabelEncoder3.joblib"},
-                                    4:{"model":"soc/models/Rede4_2Labels.keras", "encoder":"soc/encoders/LabelEncoder4.joblib"}
+                                    1:{"model":"/models/Rede1_15Labels.keras", "encoder":"/encoders/LabelEncoder.joblib"},
+                                    2:{"model":"/soc/models/Rede2_2Labels.keras", "encoder":"/soc/encoders/LabelEncoder2.joblib"},
+                                    3:{"model":"/soc/models/Rede3_15Labels.keras", "encoder":"/soc/encoders/LabelEncoder3.joblib"},
+                                    4:{"model":"/soc/models/Rede4_2Labels.keras", "encoder":"/soc/encoders/LabelEncoder4.joblib"}
                                 }
 DICT_MAX_VALUES = {
                     'Init_Win_bytes_forward': 65535,
@@ -28,13 +33,14 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 BOOL_USE_DB = True
 INT_DAY_TO_RESET_DB = 1
 PYSHARK_CAPTURE_TIMEOUT = 100
-PYSHARK_CAPTURE_INTERFACE = 'WiFi'
+PYSHARK_CAPTURE_INTERFACE = 'ciscodump'
 DICT_ITEM_NEXT_STATUS = {
                             'NEW':'RUNNING',
                             'RUNNING':'BENIGN'
                         }
 BOOL_CLEAR_ALL_DB = True
 BOOL_MODEL_CONTAINS_MULTIPLE_LABELS = True
+CODE_VERSION='0.1'
 
 #PATH_CSV_PCAP = "output.csv"
 #PATH_CSV_MALIGN = "malign_data.csv"
