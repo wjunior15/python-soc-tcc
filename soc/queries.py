@@ -234,6 +234,16 @@ def insert_alert(in_id, dt_row, in_alert):
             print("Erro ao inserir alerta:", str(e))
         
 def get_captures_by_ips(in_dst, in_src):
+    """Função que busca por capturas de trafego entre dois ips
+    
+    Args:
+        in_dst (string): ip da máquina dada como destino da conexão
+        in_src (string): ip da máquina dada como fonte da conexão
+    
+    Returns:
+        out_dt (datatable): dados de todas as conexões correspondentes neste fluxo
+    
+    """
     conn = conn_db()
     if conn:
         try:
