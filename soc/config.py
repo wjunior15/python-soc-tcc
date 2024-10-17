@@ -33,7 +33,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 BOOL_USE_DB = True
 INT_DAY_TO_RESET_DB = 1
 PYSHARK_CAPTURE_TIMEOUT = 100
-PYSHARK_CAPTURE_INTERFACE = 'ciscodump'
+PYSHARK_CAPTURE_INTERFACE = 'eth0'
 DICT_ITEM_NEXT_STATUS = {
                             'NEW':'RUNNING',
                             'RUNNING':'BENIGN'

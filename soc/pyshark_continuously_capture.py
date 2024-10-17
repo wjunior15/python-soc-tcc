@@ -299,14 +299,14 @@ def main():
     try:
         init_exec_time = int(time.time())
         
-        print("     ---- INICIA PYTHON SOC",config.CODE_VERSION, "---- Cria banco de dados")
+        print("     ---- INICIA PYTHON SOC",config.CODE_VERSION, "----")
         queries.create_db()
         
         le, model = get_model_and_encoder()
         
         print(" --- Inicia Coleta de PCAPs")
-        capture = pyshark.LiveCapture(interface=config.PYSHARK_CAPTURE_INTERFACE, bpf_filter=f'host {config.PYSHARK_HOST}')
-        
+        capture = pyshark.LiveCapture(interface=config.PYSHARK_CAPTURE_INTERFACE)
+        print(" --- Capture configurado")
         for pcap in capture.sniff_continuously():
             if 'IP' in pcap and 'TCP' in pcap:
                 list_pcap = get_pcap_data(pcap, int(init_exec_time))
