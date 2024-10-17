@@ -270,15 +270,6 @@ def get_benign_pcaps(in_id):
     print("  --- BENIGN PCAP ---")
     queries.update_status_captures(in_id, "BENIGN", None)
 
-def print_end_time(in_init_time):
-    """
-    Função que faz a impressão do tempo total de execução do processo.
-    
-    Args:
-        in_encoder_path (int): Timestamp do tempo de inicio de execução do processo
-    """
-    print("Tempo total de execução da captura:",str(int(time.time())-in_init_time),"segundos")
-
 def main():
     try:
         init_exec_time = int(time.time())
@@ -323,7 +314,7 @@ def main():
     except KeyboardInterrupt:
         print(" --- EXECUÇÃO INTERROMPIDA PELO USUÁRIO ---")
 
-    print_end_time(init_exec_time)
+    print("Tempo total de execução da captura:",str(int(time.time())-init_exec_time),"segundos")
 
 if __name__ == '__main__':
     main()

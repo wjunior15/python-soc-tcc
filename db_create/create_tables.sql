@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS alerts, captures;
 
 CREATE TABLE captures(
+    id_pcap SERIAL,
     ip_src varchar(50) NOT NULL,
     ip_dst varchar(50) NOT NULL,
     timestamp_conn bigint NOT NULL,
@@ -10,13 +11,12 @@ CREATE TABLE captures(
     ack_flag integer NOT NULL,
     win_size decimal(8),
     cap_status varchar(50),
-    CONSTRAINT PK_pcap PRIMARY KEY (ip_src, ip_dst, timestamp_conn)
+    CONSTRAINT PK_pcap PRIMARY KEY (id_pcap)
 );
 
 CREATE TABLE alerts(
-    ip_src varchar(50) NOT NULL,
-    ip_dst varchar(50) NOT NULL,
-    timestamp_conn bigint NOT NULL,
+    id_alert SERIAL,
+    id_pcap integer,
     label varchar(50) NOT NULL,
     init_win_fwd integer,
     ack_count integer,
@@ -28,7 +28,6 @@ CREATE TABLE alerts(
     init_win_bwd integer,
     sub_bwd decimal(8),
     iat_mean decimal(8),
-    CONSTRAINT PK_alert PRIMARY KEY (ip_src, ip_dst, timestamp_conn, label),
-    CONSTRAINT FK_alert_pcap FOREIGN KEY (ip_src, ip_dst, timestamp_conn) REFERENCES captures(ip_src, ip_dst, timestamp_conn)
-
+    CONSTRAINT PK_alert PRIMARY KEY (id_alert, id_pcap),
+    CONSTRAINT FK_alert_pcap FOREIGN KEY (id_pcap) REFERENCES captures(id_pcap)
 );

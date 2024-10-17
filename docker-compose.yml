@@ -17,9 +17,6 @@ services:
     volumes:
       - fazenda_pg_data:/bitnami/postgresql
 
-    networks:
-      - backend
-
   soc:
     build:
       context: ./soc
@@ -47,9 +44,6 @@ services:
 
     ports:
       - '3000:3000'
-
-    networks:
-      - backend
     
     restart: unless-stopped
 
@@ -73,16 +67,14 @@ services:
 
     depends_on:
       - soc
-
-    networks:
-      - backend
     
     restart: unless-stopped
 
     
 
 networks:
-  backend:
+  default:
+    driver: bridge
 
 volumes:
   fazenda_pg_data:
