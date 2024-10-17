@@ -1,11 +1,14 @@
 import os
 import platform
 
-if platform.system() == 'Windows':
+SYSTEM_NAME = platform.system()
+
+if SYSTEM_NAME == 'Windows':
     import dotenv
     dotenv.load_dotenv()
     
 PROJECT_PATH = os.getcwd()
+MODEL_NUMBER = 1
 PYSHARK_HOST = "app"
 DICT_ACTIVE_MODEL_AND_ENCODER = {
                                     1:{"model":"/models/Rede1_15Labels.keras", "encoder":"/encoders/LabelEncoder.joblib"},
@@ -34,6 +37,8 @@ BOOL_USE_DB = True
 INT_DAY_TO_RESET_DB = 1
 PYSHARK_CAPTURE_TIMEOUT = 100
 PYSHARK_CAPTURE_INTERFACE = 'eth0'
+if SYSTEM_NAME == 'Windows':
+    PYSHARK_CAPTURE_INTERFACE = 'WiFi'
 DICT_ITEM_NEXT_STATUS = {
                             'NEW':'RUNNING',
                             'RUNNING':'BENIGN'

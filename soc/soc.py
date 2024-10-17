@@ -12,6 +12,33 @@ import pyshark
 import traceback
 import os
 
+def get_model_and_encoder():
+    """
+    Função que faz a importação dos modelos de RNA e encoder de dados.
+        
+    Returns:
+        out_le (encoder): Modelo de encoder de dados pré-treinado.
+        out_model (tf_model): Modelo pré-treinado do tensorflow.
+    """
+    
+    int_number = config.MODEL_NUMBER
+    print(" --- Número selecionado:",int_number)
+    
+    #Linux path
+    le_path = os.getcwd()+config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["encoder"]
+    model_path = os.getcwd()+config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["model"]
+    
+    #Windows path
+    if config.SYSTEM_NAME == 'Windows':
+            le_path = config.PROJECT_PATH+config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["encoder"].replace('/','\\')
+            model_path = config.PROJECT_PATH+config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["model"].replace('/','\\')
+    
+    out_le = import_encoder(le_path)
+    out_model = import_tf_model(model_path)
+    print(" --- Modelo TF e encoder importados com sucesso!")
+    
+    return out_le, out_model
+
 def import_tf_model(in_model_path):
     """
     Função importa modelo tensorflow treinado previamente.
@@ -22,38 +49,6 @@ def import_tf_model(in_model_path):
         out_tf_model (tf.model): Modelo de RNA importado
     """
     return keras.models.load_model(in_model_path)
-
-def get_pcap_data(in_pcap, in_time_zero):
-    """
-    Função extraí os dados necessários dos pcaps.
-    
-    Args:
-        in_pcap (object): Pcap analisado
-        in_time_zero (float): Timestamp do item zero coletado
-    Returns:
-        out_list_pcap (list): Dados extraídos do pcap
-    """
-    if 'IP' in in_pcap and 'TCP' in in_pcap:
-        # Extrai dados
-        source_ip = in_pcap.ip.src
-        destination_ip = in_pcap.ip.dst
-        source_port = in_pcap.tcp.srcport
-        destination_port = in_pcap.tcp.dstport
-        tcp_flags = in_pcap.tcp.flags
-        window_size = in_pcap.tcp.window_size
-        timestamp = int(float(in_pcap.sniff_timestamp)) - in_time_zero
-        if config.BOOL_USE_DB:
-            timestamp = int(float(in_pcap.sniff_timestamp))
-        
-        sync_flag = 0
-        ack_flag = 0
-        if str(tcp_flags) != '':
-                tcp_flags = int(tcp_flags, 16)
-                sync_flag = 1 if tcp_flags & 0b000010 else 0
-                ack_flag = 1 if tcp_flags & 0b10000 else 0
-                
-        out_list_pcap = [source_ip, destination_ip, source_port, destination_port, timestamp, sync_flag, ack_flag, window_size]
-        return out_list_pcap
 
 def import_encoder(in_encoder_path):
     """
@@ -66,21 +61,34 @@ def import_encoder(in_encoder_path):
     """
     return joblib.load(in_encoder_path)
 
-def print_end_time(in_init_time):
+def get_pcap_data(in_pcap):
     """
-    Função que faz a impressão do tempo total de execução do processo.
+    Função extraí os dados necessários dos pcaps.
     
     Args:
-        in_encoder_path (int): Timestamp do tempo de inicio de execução do processo
+        in_pcap (object): Pcap analisado
+        in_time_zero (float): Timestamp do item zero coletado
+    Returns:
+        out_list_pcap (list): Dados extraídos do pcap
     """
-    print("Tempo total de execução da captura:",str(int(time.time())-in_init_time),"segundos")
-
-def define_list_to_query_by_att(in_ip_src, in_ip_dst):
-    out_list_names = ['ip_src', 'ip_dst']
-    out_list_values = [f"('{in_ip_src}', '{in_ip_dst}')", f"('{in_ip_src}', '{in_ip_dst}')"]
-    out_list_conditions = ['IN', 'IN']
-    out_and_or = "AND"
-    return out_list_names, out_list_values, out_list_conditions, out_and_or
+    # Extrai dados
+    source_ip = in_pcap.ip.src
+    destination_ip = in_pcap.ip.dst
+    source_port = in_pcap.tcp.srcport
+    destination_port = in_pcap.tcp.dstport
+    tcp_flags = in_pcap.tcp.flags
+    window_size = in_pcap.tcp.window_size
+    timestamp = int(time.time())
+    
+    sync_flag = 0
+    ack_flag = 0
+    if str(tcp_flags) != '':
+            tcp_flags = int(tcp_flags, 16)
+            sync_flag = 1 if tcp_flags & 0b000010 else 0
+            ack_flag = 1 if tcp_flags & 0b10000 else 0
+            
+    out_list_pcap = [source_ip, destination_ip, source_port, destination_port, timestamp, sync_flag, ack_flag, window_size]
+    return out_list_pcap
 
 def get_model_attributes_by_pcap_data(pcap, raw_data, timestamp_zero):
     """
@@ -239,67 +247,43 @@ def predict_with_model(in_list_data_rna, in_model, in_le):
     out_arr_predict_decode = decoder_data(in_le=in_le, in_predictions=arr_predict)
     return out_arr_predict_decode
 
-def get_malign_pcaps(in_item_predict_decode, in_arr_data_rna):
+def get_malign_pcaps(in_id, in_item_predict_decode, in_arr_data_rna):
     """
     Função que trata pcaps considerados ALERTAS pelo modelo de RNA
     
     Args:
+        in_id (int): id da capture relacionada ao alert que será criado
         in_item_predict_decode (string): Label definido pela RNA
         in_arr_data_rna (list): Lista contendo o dicionário de dados do pcap com os atributos utilizados pelo modelo RNA
     """
     print(in_arr_data_rna[0]['Source']," -> ",in_arr_data_rna[0]["Destiny"]," | Warning: ",in_item_predict_decode, " | Timestamp: ", in_arr_data_rna[0]['Timestamp'])
-    queries.update_status_captures(in_arr_data_rna[0]['Source'], in_arr_data_rna[0]['Destiny'], in_arr_data_rna[0]['Timestamp'], "ALERT", None)
-    queries.insert_alert(in_arr_data_rna[0], in_item_predict_decode)
+    queries.update_status_captures(in_id, "ALERT", None)
+    id_alert = queries.insert_alert(in_id, in_arr_data_rna[0], in_item_predict_decode)
     
-def get_benign_pcaps(in_arr_data_rna):
+def get_benign_pcaps(in_id):
     """
     Função que trata pcaps considerados NORMAIS pelo modelo de RNA
     
     Args:
-        in_arr_data_rna (list): Lista contendo o dicionário de dados do pcap com os atributos utilizados pelo modelo RNA
+        in_id (int): identificador da capture
     """
     print("  --- BENIGN PCAP ---")
-    queries.update_status_captures(in_arr_data_rna[0]['Source'], in_arr_data_rna[0]['Destiny'], in_arr_data_rna[0]['Timestamp'], "BENIGN", None)
+    queries.update_status_captures(in_id, "BENIGN", None)
 
-def get_model_number():
+def print_end_time(in_init_time):
     """
-    Função que faz a validação da entrada de dados do usuário para seleção do tipo de modelo a ser carregado.
-        
-    Returns:
-        int_number (int): Número do modelo que será carregado
-    """
-    range_modelos = range(1,5)
-    int_number = int(input("Type model and encoder number [1-4]: "))
-    if int_number in range_modelos:
-        return int_number
-    print("Número de modelo indisponível - Insira um número dentro do range: ",range_modelos)
-    get_model_number()
-
-def get_model_and_encoder():
-    """
-    Função que faz a importação dos modelos de RNA e encoder de dados.
-        
-    Returns:
-        out_le (encoder): Modelo de encoder de dados pré-treinado.
-        out_model (tf_model): Modelo pré-treinado do tensorflow.
-    """
+    Função que faz a impressão do tempo total de execução do processo.
     
-    int_number = 1 #get_model_number()
-    print(" --- Número selecionado:",int_number)
-    le_path = os.getcwd()+config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["encoder"]
-    model_path = os.getcwd()+config.DICT_ACTIVE_MODEL_AND_ENCODER[int_number]["model"]
-    out_le = import_encoder(le_path)
-    print(" --- Encoder de dados importado com sucesso!")
-    out_model = import_tf_model(model_path)
-    print(" --- Modelo TF importado com sucesso!")
-    
-    return out_le, out_model
+    Args:
+        in_encoder_path (int): Timestamp do tempo de inicio de execução do processo
+    """
+    print("Tempo total de execução da captura:",str(int(time.time())-in_init_time),"segundos")
 
 def main():
     try:
         init_exec_time = int(time.time())
         
-        print("     ---- INICIA PYTHON SOC",config.CODE_VERSION, "----")
+        print("---- INICIA PYTHON SOC",config.CODE_VERSION, "----")
         queries.create_db()
         
         le, model = get_model_and_encoder()
@@ -309,27 +293,27 @@ def main():
         print(" --- Capture configurado")
         for pcap in capture.sniff_continuously():
             if 'IP' in pcap and 'TCP' in pcap:
-                list_pcap = get_pcap_data(pcap, int(init_exec_time))
+                list_pcap = get_pcap_data(pcap)
                 
                 if list_pcap:
-                    queries.insert_pcap_data(list_pcap)
+                    id_pcap = queries.insert_pcap_data(list_pcap)
+                    
                     #No analyse if this is sync pcap - Infinity error in pck/s 
                     if list_pcap[5] == 1:
                         continue
                     
-                    name_list, value_list, condition_list, and_or = define_list_to_query_by_att(list_pcap[0], list_pcap[1])
-                    raw_data = queries.get_captures_by_attribute_list(name_list, value_list, condition_list, and_or)
+                    raw_data = queries.get_captures_by_ips(list_pcap[1], list_pcap[0])
                     list_data_rna = get_model_attributes_by_pcap_data(list_pcap, raw_data, init_exec_time)
                     
                     if list_data_rna:
-                        queries.update_status_captures(list_data_rna[0]['Source'], list_data_rna[0]['Destiny'], list_data_rna[0]['Timestamp'], "RUNNING", None)
+                        queries.update_status_captures(id_pcap, "RUNNING", None)
                         item_predicted_decode = predict_with_model(list_data_rna, model, le)[0]
                         
                         if not item_predicted_decode == "BENIGN":
-                            get_malign_pcaps(item_predicted_decode, list_data_rna)
+                            get_malign_pcaps(id_pcap, item_predicted_decode, list_data_rna)
                             continue
                         
-                        get_benign_pcaps(list_data_rna)
+                        get_benign_pcaps(id_pcap)
         
     except Exception as e:
         print("Erro na captura:", str(e))
