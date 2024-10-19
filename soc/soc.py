@@ -274,7 +274,7 @@ def main():
     try:
         init_exec_time = int(time.time())
         
-        print("---- INICIA PYTHON SOC",config.CODE_VERSION, "----")
+        print("---- INICIA PYTHON SOC on",config.SYSTEM_NAME,"version",config.CODE_VERSION, "----")
         queries.create_db()
         
         le, model = get_model_and_encoder()
