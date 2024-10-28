@@ -10,3 +10,4 @@ analyse_data.ipynb
 .env
 Dockerfile
 docker-compose.yml
+/db_create/
