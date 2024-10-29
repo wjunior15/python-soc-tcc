@@ -1,5 +1,9 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import os
+
+app_host = str(os.getenv("APP_HOST"))
+app_port = int(os.getenv("APP_PORT"))
 
 app = Flask(__name__)
 CORS(app)
@@ -15,4 +19,5 @@ def sum():
         return jsonify({'message':'dados recebidos'})
     return jsonify({'message':'dados faltantes'})
 
-app.run(host='0.0.0.0', port=8000, debug=True)
+
+app.run(host=app_host, port=app_port, debug=True)
