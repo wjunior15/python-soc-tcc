@@ -8,6 +8,5 @@ sub_process_tcpdump.py
 definicoes_variaveis_modelo_rna.txt
 analyse_data.ipynb
 .env
-Dockerfile
 docker-compose.yml
 /db_create/

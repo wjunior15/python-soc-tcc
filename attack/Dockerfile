@@ -1,0 +1,19 @@
+FROM ubuntu:latest
+
+LABEL maintainer="wellingtonresende15@gmail.com"
+
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y \
+    curl \
+    wget \
+    vim \
+    nano \
+    gnupg \
+    git && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN curl https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && \
+    chmod 755 msfinstall && \
+    ./msfinstall
+
+CMD [ "bash" ]
