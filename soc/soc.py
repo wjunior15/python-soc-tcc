@@ -11,6 +11,7 @@ import time
 import pyshark
 import traceback
 import os
+import model_data as md
 
 def get_model_and_encoder():
     """
@@ -114,55 +115,28 @@ def get_model_attributes_by_pcap_data(pcap, raw_data, timestamp_zero):
     real_ip_dst = None
     init_win_fwd = None
     init_win_bwd = None
-    fwd_pkg_s = 1
-    bwd_pkg_s = 1
     
     #Init Win Bytes Fwd - Apenas Flag SYN
-    fwd_pcaps = raw_data.query('`SYN Flag` == 1 & `ACK Flag` == 0 & `IP Source` in @arr_ips & `IP Destination` in @arr_ips')
-    if len(fwd_pcaps)>0:
-        init_win_fwd = int(fwd_pcaps.iloc[0,-1])
-        real_ip_src = fwd_pcaps.iloc[0,0]
-        real_ip_dst = fwd_pcaps.iloc[0,1]
+    init_win_fwd, real_ip_src, real_ip_dst = md.get_init_win_fwd(raw_data, arr_ips)
     
     #Init Win Bytes Bwd - Flag SYN e ACK
-    bwd_pcaps = raw_data.query('`SYN Flag` == 1 & `ACK Flag` == 1 & `IP Source` in @arr_ips & `IP Destination` in @arr_ips')
-    if len(bwd_pcaps)>0:
-        init_win_bwd = int(bwd_pcaps.iloc[0,-1])
+    init_win_bwd = md.get_init_win_bwd(raw_data, arr_ips)
     
     if real_ip_dst and real_ip_dst:
         #Fwd Packets/s
-        fwd_pck = raw_data.query('`IP Source` == @real_ip_src & `IP Destination` == @real_ip_dst')
-        min_time_pck = fwd_pck["Timestamp"].min()
-        count_pck = len(fwd_pck)
-        time_diff = timestamp - min_time_pck
-        if time_diff != 0:
-            fwd_pkg_s = count_pck/(time_diff)
+        fwd_pkg_s = md.get_fwd_packets(raw_data, real_ip_src, real_ip_dst, timestamp)
         
         #Bwd Packets/s
-        bwd_pck = raw_data.query('`IP Source` == @real_ip_dst & `IP Destination` == @real_ip_src')
-        min_time_pck = bwd_pck["Timestamp"].min()
-        count_pck = len(bwd_pck)
-        time_diff = timestamp - min_time_pck
-        if time_diff != 0:
-            bwd_pkg_s = count_pck/time_diff
+        bwd_pkg_s = md.get_bwd_packets(raw_data, real_ip_src, real_ip_dst, timestamp)
         
         #IAT
-        data_diff_IAT = raw_data.query('`IP Source` in @arr_ips & `IP Destination` in @arr_ips & `Timestamp` <= @timestamp').sort_values(by=["Timestamp"])["Timestamp"].diff()
-        iat_max = data_diff_IAT.max()
-        iat_min = data_diff_IAT.min()
-        iat_mean = data_diff_IAT.mean()
-        if np.isnan(iat_max):
-            iat_max, iat_min, iat_mean = [0, 0, 0]
+        iat_max, iat_min, iat_mean = md.get_iat(raw_data, arr_ips, timestamp)
         
         #Flow Duration
-        data_flow_duration = raw_data.query('`IP Source` in @arr_ips & `IP Destination` in @arr_ips & `Timestamp` <= @timestamp')["Timestamp"]
-        flow_duration = data_flow_duration.max() - data_flow_duration.min()
-        if np.isnan(flow_duration):
-            flow_duration = 0
+        flow_duration = md.get_flow_duration(raw_data, arr_ips, timestamp)
             
         #Subflow Backward Bytes
-        data_subflow = raw_data.query('`IP Source` == @real_ip_dst & `IP Destination` == @real_ip_src & `Timestamp` <= @timestamp')
-        sum_bytes = data_subflow["Timestamp"].sum()
+        subflow_bwd = md.get_subflow_bwd(raw_data, real_ip_src, real_ip_dst, timestamp)
         
         data_rna = {"Init_Win_bytes_forward":init_win_fwd,
                              "ACK Flag Count":ack_flag,
@@ -172,7 +146,7 @@ def get_model_attributes_by_pcap_data(pcap, raw_data, timestamp_zero):
                              "Flow IAT Min":iat_min,
                              "Flow Duration":flow_duration,
                              "Init_Win_bytes_backward":init_win_bwd,
-                             "Subflow Bwd Bytes":sum_bytes,
+                             "Subflow Bwd Bytes":subflow_bwd,
                              "Flow IAT Mean":iat_mean,
                              "Label":None,
                              "Source":ip_src,
