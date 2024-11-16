@@ -119,18 +119,15 @@ def get_model_attributes_by_pcap_data(pcap, raw_data, timestamp_zero):
     
     #Inicializa valores do fluxo analisado
     arr_ips = [ip_src, ip_dst]
-    real_ip_src = None
-    real_ip_dst = None
-    init_win_fwd = None
-    init_win_bwd = None
     
     #Init Win Bytes Fwd - Apenas Flag SYN
     init_win_fwd, real_ip_src, real_ip_dst = md.get_init_win_fwd(raw_data, arr_ips)
     
-    #Init Win Bytes Bwd - Flag SYN e ACK
-    init_win_bwd = md.get_init_win_bwd(raw_data, arr_ips)
-    
+    #Success in Get Init Window Bytes Fwd
     if real_ip_dst and real_ip_dst:
+        #Init Win Bytes Bwd - Flag SYN e ACK
+        init_win_bwd = md.get_init_win_bwd(raw_data, arr_ips)
+        
         #Fwd Packets/s
         fwd_pkg_s = md.get_fwd_packets(raw_data, real_ip_src, real_ip_dst, timestamp)
         

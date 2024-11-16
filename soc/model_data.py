@@ -2,13 +2,17 @@ import pandas as pd
 import numpy as np
 
 def get_init_win_fwd(in_data, in_arr_ips):
-        fwd_pcaps = in_data.query('`SYN Flag` == 1 & `ACK Flag` == 0 & `IP Source` in @in_arr_ips & `IP Destination` in @in_arr_ips')
-        if len(fwd_pcaps)>0:
-            out_init_win_fwd = int(fwd_pcaps.iloc[0,-1])
-            out_ip_src = fwd_pcaps.iloc[0,0]
-            out_ip_dst = fwd_pcaps.iloc[0,1]
-            return out_init_win_fwd, out_ip_src, out_ip_dst
-        
+        try:
+            fwd_pcaps = in_data.query('`SYN Flag` == 1 & `ACK Flag` == 0 & `IP Source` in @in_arr_ips & `IP Destination` in @in_arr_ips')
+            if len(fwd_pcaps)>0:
+                out_init_win_fwd = int(fwd_pcaps.iloc[0,-1])
+                out_ip_src = fwd_pcaps.iloc[0,0]
+                out_ip_dst = fwd_pcaps.iloc[0,1]
+                return out_init_win_fwd, out_ip_src, out_ip_dst
+        except Exception as e:
+            print("Erro ao calcular dados do PCAP:",str(e))
+            return None, None, None
+            
 def get_init_win_bwd(in_data, in_arr_ips):
     bwd_pcaps = in_data.query('`SYN Flag` == 1 & `ACK Flag` == 1 & `IP Source` in @in_arr_ips & `IP Destination` in @in_arr_ips')
     if len(bwd_pcaps)>0:
