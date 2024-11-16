@@ -12,6 +12,14 @@ import pyshark
 import traceback
 import os
 import model_data as md
+import socket
+
+def get_ip_using_socket(hostname):
+    try:
+        return socket.gethostbyname(hostname)
+    except socket.error as e:
+        print(f"Error: {e}")
+        return None
 
 def get_model_and_encoder():
     """
@@ -252,6 +260,8 @@ def main():
         queries.create_db()
         
         le, model = get_model_and_encoder()
+        ip_db = str(get_ip_using_socket("postgres"))
+        print(" -- IP Banco de Dados",ip_db)
         
         print(" --- Inicia Coleta de PCAPs")
         capture = pyshark.LiveCapture(interface=config.PYSHARK_CAPTURE_INTERFACE)
@@ -261,6 +271,10 @@ def main():
                 list_pcap = get_pcap_data(pcap)
                 
                 if list_pcap:
+                    #No include in db if this connection is between db and soc
+                    if str(list_pcap[0]) == ip_db or str(list_pcap[1]) == ip_db:
+                        continue
+                    
                     id_pcap = queries.insert_pcap_data(list_pcap)
                     
                     #No analyse if this is sync pcap - Infinity error in pck/s 
