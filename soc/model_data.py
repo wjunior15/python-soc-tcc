@@ -9,6 +9,8 @@ def get_init_win_fwd(in_data, in_arr_ips):
                 out_ip_src = fwd_pcaps.iloc[0,0]
                 out_ip_dst = fwd_pcaps.iloc[0,1]
                 return out_init_win_fwd, out_ip_src, out_ip_dst
+            return None, None, None
+        
         except Exception as e:
             print("Erro ao calcular dados do PCAP:",str(e))
             return None, None, None
