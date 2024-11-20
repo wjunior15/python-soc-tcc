@@ -226,7 +226,7 @@ def predict_with_model(in_list_data_rna, in_model, in_le):
     out_arr_predict_decode = decoder_data(in_le=in_le, in_predictions=arr_predict)
     return out_arr_predict_decode
 
-def get_malign_pcaps(in_id, in_item_predict_decode, in_arr_data_rna):
+def get_malign_pcaps(in_id, in_alert_type, in_arr_data_rna):
     """
     Função que trata pcaps considerados ALERTAS pelo modelo de RNA
     
@@ -235,11 +235,11 @@ def get_malign_pcaps(in_id, in_item_predict_decode, in_arr_data_rna):
         in_item_predict_decode (string): Label definido pela RNA
         in_arr_data_rna (list): Lista contendo o dicionário de dados do pcap com os atributos utilizados pelo modelo RNA
     """
-    print(in_arr_data_rna[0]['Source']," -> ",in_arr_data_rna[0]["Destiny"]," | Warning: ",in_item_predict_decode, " | Timestamp: ", in_arr_data_rna[0]['Timestamp'])
+    print(in_arr_data_rna[0]['Source']," -> ",in_arr_data_rna[0]["Destiny"]," | Warning: ",in_alert_type, " | Timestamp: ", in_arr_data_rna[0]['Timestamp'])
     queries.update_status_captures(in_id, "ALERT", None)
-    id_alert = queries.insert_alert(in_id, in_arr_data_rna[0], in_item_predict_decode)
+    id_alert = queries.insert_alert(in_id, in_arr_data_rna[0], in_alert_type)
     
-def get_benign_pcaps(in_id):
+def get_benign_pcaps(in_id, in_arr_data):
     """
     Função que trata pcaps considerados NORMAIS pelo modelo de RNA
     
@@ -248,6 +248,7 @@ def get_benign_pcaps(in_id):
     """
     print("  --- BENIGN PCAP ---")
     queries.update_status_captures(in_id, "BENIGN", None)
+    id_alert = queries.insert_alert(in_id, in_arr_data[0], "BENIGN")
 
 def main():
     try:
@@ -274,11 +275,11 @@ def main():
                     
                     id_pcap = queries.insert_pcap_data(list_pcap)
                     
-                    #No analyse if this is sync pcap - Infinity error in pck/s 
-                    if list_pcap[5] == 1:
+                    #No analyse if this is unique pcap in this flow - Infinity error in pck/s
+                    raw_data = queries.get_captures_by_ips(list_pcap[1], list_pcap[0])
+                    if len(raw_data) == 1:
                         continue
                     
-                    raw_data = queries.get_captures_by_ips(list_pcap[1], list_pcap[0])
                     list_data_rna = get_model_attributes_by_pcap_data(list_pcap, raw_data, init_exec_time)
                     
                     if list_data_rna:
@@ -289,7 +290,7 @@ def main():
                             get_malign_pcaps(id_pcap, item_predicted_decode, list_data_rna)
                             continue
                         
-                        get_benign_pcaps(id_pcap)
+                        get_benign_pcaps(id_pcap, list_data_rna)
         
     except Exception as e:
         print("Erro na captura:", str(e))
