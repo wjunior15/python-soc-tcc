@@ -1,70 +1,41 @@
 import pandas as pd
 import numpy as np
 
-def get_init_win_fwd(in_data, in_ip_src, in_ip_dst):
+def get_mean_win_fwd(in_fwd_pcaps):
         try:
-            fwd_pcaps = in_data.query('`SYN Flag` == 1 & `IP Source` == @in_ip_src & `IP Destination` == @in_ip_dst')
-            if len(fwd_pcaps)>0:
-                out_init_win_fwd = int(fwd_pcaps.iloc[0,-1])
-                return out_init_win_fwd
-            return None
+            if len(in_fwd_pcaps)>0:
+                out_mean_win_fwd = int(in_fwd_pcaps["TCP Window Size"].mean())
+                return out_mean_win_fwd
+            return 0
         
         except Exception as e:
             print("Erro ao calcular dados do PCAP:",str(e))
             return None
             
-def get_init_win_bwd(in_data, in_ip_src, in_ip_dst):
-    bwd_pcaps = in_data.query('`SYN Flag` == 1 & `IP Source` == @in_ip_dst & `IP Destination` == @in_ip_src')
-    if len(bwd_pcaps)>0:
-        init_win_bwd = int(bwd_pcaps.iloc[0,-1])
-        return init_win_bwd
+def get_init_win_bwd(in_bwd_pcaps):
+    if len(in_bwd_pcaps)>0:
+        out_mean_win_bwd = int(in_bwd_pcaps["TCP Window Size"].mean())
+        return out_mean_win_bwd
     return 0
     
-def get_fwd_packets(in_data, in_ip_src, in_ip_dst, in_timestamp):
-    out_fwd_pcks = 0
-    
-    fwd_pck = in_data.query('`IP Source` == @in_ip_src & `IP Destination` == @in_ip_dst')
-    if len(fwd_pck) > 0:
-        min_time_pck = fwd_pck["Timestamp"].min()
-        count_pck = len(fwd_pck)
-        time_diff = in_timestamp - min_time_pck
+def get_packets(in_pcaps):
+    if len(in_pcaps) > 0:
+        min_time_pck = int(in_pcaps["Timestamp"].min())
+        max_time_pck = int(in_pcaps["Timestamp"].max())
+        count_pck = len(in_pcaps)
+        time_diff = max_time_pck - min_time_pck
         if time_diff != 0:
-            out_fwd_pcks = count_pck/(time_diff)
-            
-        return out_fwd_pcks
-    return out_fwd_pcks
+            out_pcks = count_pck/(time_diff)
+            return out_pcks
+        return count_pck
+    return 0
 
-def get_bwd_packets(in_data, in_ip_src, in_ip_dst, in_timestamp):
-    out_bwd_pcks = 0
-    
-    bwd_pck = in_data.query('`IP Source` == @in_ip_src & `IP Destination` == @in_ip_dst')
-    if len(bwd_pck) > 0:
-        min_time_pck = bwd_pck["Timestamp"].min()
-        count_pck = len(bwd_pck)
-        time_diff = in_timestamp - min_time_pck
-        if time_diff != 0:
-            out_bwd_pcks = count_pck/time_diff
-        
-        return out_bwd_pcks
-    return out_bwd_pcks
-
-def get_iat(in_data, in_arr_ips, in_timestamp):
-        data_diff_IAT = in_data.query('`IP Source` in @in_arr_ips & `IP Destination` in @in_arr_ips & `Timestamp` <= @in_timestamp').sort_values(by=["Timestamp"])["Timestamp"].diff()
-        out_iat_max = data_diff_IAT.max()
-        out_iat_min = data_diff_IAT.min()
-        out_iat_mean = data_diff_IAT.mean()
+def get_iat(in_data):
+        ascending_data = in_data.sort_values(by=["Timestamp"], ascending=True)
+        diff_data = ascending_data["Timestamp"].diff()
+        out_iat_max = diff_data.max()
+        out_iat_min = diff_data.min()
+        out_iat_mean = diff_data.mean()
         if np.isnan(out_iat_max):
             out_iat_max, out_iat_min, out_iat_mean = [0, 0, 0]
         return out_iat_max, out_iat_min, out_iat_mean
-
-def get_flow_duration(in_data, in_arr_ips, in_timestamp):
-    data_flow_duration = in_data.query('`IP Source` in @in_arr_ips & `IP Destination` in @in_arr_ips & `Timestamp` <= @in_timestamp')["Timestamp"]
-    out_flow_duration = data_flow_duration.max() - data_flow_duration.min()
-    if np.isnan(out_flow_duration):
-        out_flow_duration = 0
-    return out_flow_duration
-
-def get_subflow_bwd(in_data, in_ip_src, in_ip_dst, in_timestamp):
-    subflow_data = in_data.query('`IP Source` == @in_ip_dst & `IP Destination` == @in_ip_src & `Timestamp` <= @in_timestamp')
-    out_subflow_bwd = subflow_data["Timestamp"].sum()
-    return out_subflow_bwd

@@ -2,6 +2,7 @@
 /soc/__pycache__/
 /app/__pycache__/
 /attack/__pycache__/
+/process/__pycache__/
 /junk/
 process_data_pcaps.py
 pyshark_capture.py
