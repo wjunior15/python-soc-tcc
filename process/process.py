@@ -12,19 +12,21 @@ def get_ip_using_socket(hostname):
         print(f"Error: {e}")
         return None
 
-def get_model_attributes_by_pcap_data(pcap, raw_data, timestamp_zero, ip_soc):
+def get_model_attributes_by_pcap_data(pcap, raw_data, ip_soc):
     """
     Função que extrai os dados que serão utilizados no modelo RNA
     
     Args:
         pcap (dataframe_row): Linha de dados que representa uma conexão TCP
         raw_data (dataframe): Dataframe contendo todos os dados de PCAPs
+        ip_soc (string): IP do host do soc
     Returns:
         out_list_rna (list): Lista contendo o dicionário com os dados para o modelo extraídos do PCAP
     """
     #Define valores do item analisado
     ip_src = pcap[0]
     ip_dst = pcap[1]
+    
     if ip_src == ip_soc:
         ip_src = ip_dst
         ip_dst = ip_soc
@@ -32,29 +34,24 @@ def get_model_attributes_by_pcap_data(pcap, raw_data, timestamp_zero, ip_soc):
     if ip_dst == ip_soc:
         ip_dst = ip_soc
     
-    timestamp = pcap[4] - timestamp_zero
     syn_flag = pcap[5]
     ack_flag = pcap[6]
-    win_size = pcap[7]
     
-    #Inicializa valores do fluxo analisado
-    arr_ips = [ip_src, ip_dst]
-    
+    print("IP Source", ip_src)
+    print("IP Destination", ip_dst)
     #Dados de Fwd e Bwd utilizados na obtenção da variáveis do modelo
     fwd_pck = raw_data.query('`IP Source` == @ip_src & `IP Destination` == @ip_dst')
     bwd_pck = raw_data.query('`IP Source` == @ip_src & `IP Destination` == @ip_dst')
     
-    #Init Win Bytes Fwd - Apenas Flag SYN
-    init_win_fwd = md.get_mean_win_fwd(fwd_pck)
-    print("Init Win Fwd",init_win_fwd)
+    #Mean Win Bytes Fwd - Apenas Flag SYN
+    init_win_fwd = md.get_mean_win_size(fwd_pck)
+    print("Mean Win Fwd",init_win_fwd)
     
     #Success in Get Init Window Bytes Fwd
-    if init_win_fwd:
-        print("Win Size", win_size)
-        
-        #Init Win Bytes Bwd - Flag SYN e ACK
-        init_win_bwd = md.get_init_win_bwd(bwd_pck)
-        print("Init Win Bwd", init_win_bwd)
+    if init_win_fwd:        
+        #Mean Win Bytes Bwd - Flag SYN e ACK
+        init_win_bwd = md.get_mean_win_size(bwd_pck)
+        print("Mean Win Bwd", init_win_bwd)
         
         #Fwd Packets/s
         fwd_pkg_s = md.get_packets(fwd_pck)
@@ -68,19 +65,24 @@ def get_model_attributes_by_pcap_data(pcap, raw_data, timestamp_zero, ip_soc):
         iat_max, iat_min, iat_mean = md.get_iat(raw_data)
         print("IAT Max",iat_max,"| IAT Médio", iat_mean,"| IAT Minímo", iat_min)
         
-        data_rna = {"Init_Win_bytes_forward":init_win_fwd,
-                             "ACK Flag Count":ack_flag,
-                             "SYN Flag Count":syn_flag,
-                             "Fwd Packets/s":fwd_pkg_s,
-                             "Bwd Packets/s":bwd_pkg_s,
-                             "Flow IAT Max":iat_max,
-                             "Flow IAT Min":iat_min,
-                             "Init_Win_bytes_backward":init_win_bwd,
-                             "Flow IAT Mean":iat_mean,
-                             "Label":None,
-                             "Source":ip_src,
-                             "Destiny":ip_dst,
-                             "Timestamp":pcap[4]}
+        #Ports Number Fwd
+        ports_number_fwd = md.get_ports_number(fwd_pck)
+        print("Ports Number",ports_number_fwd)
+        
+        data_rna = {"Mean Win Fwd":init_win_fwd,
+                    "ACK Flag Count":ack_flag,
+                    "SYN Flag Count":syn_flag,
+                    "Fwd Packets/s":fwd_pkg_s,
+                    "Bwd Packets/s":bwd_pkg_s,
+                    "Flow IAT Max":iat_max,
+                    "Flow IAT Min":iat_min,
+                    "Mean Win Bwd":init_win_bwd,
+                    "Flow IAT Mean":iat_mean,
+                    "Ports Number":ports_number_fwd,
+                    "Label":None,
+                    "Source":ip_src,
+                    "Destiny":ip_dst,
+                    "Timestamp":pcap[4]}
         
         return data_rna
     return None
@@ -88,9 +90,7 @@ def get_model_attributes_by_pcap_data(pcap, raw_data, timestamp_zero, ip_soc):
 def main():
     try:        
         print("---- INICIA PROCESS on",config.SYSTEM_NAME,"version",config.CODE_VERSION, "----")
-        
-        INDEX = 0
-        INIT_TIME = 0
+
         IP_SOC = get_ip_using_socket("soc")
         
         while 1:
@@ -100,7 +100,6 @@ def main():
                     continue
                 
                 id_pcap = dict_pcap["ID"]
-                queries.update_status_captures(id_pcap, "RUNNING")
                 
                 ip_src = dict_pcap["IP Source"]
                 ip_dst = dict_pcap["IP Destination"]
@@ -113,16 +112,10 @@ def main():
                 label = dict_pcap["Label"]
                 list_pcap = [ip_src, ip_dst, port_src, port_dst, timestamp, syn_flag, ack_flag, win_size]
                 
-                if INDEX == 0:
-                    INIT_TIME = timestamp
-                
                 #No analyse if this is unique pcap in this flow - Infinity error in pck/s
                 all_flow_data = queries.get_captures_by_ips(ip_dst, ip_src)
-                if len(all_flow_data) == 1:
-                    queries.update_status_captures(id_pcap, "PROCESS")
-                    continue
                 
-                data_rna = get_model_attributes_by_pcap_data(list_pcap, all_flow_data, INIT_TIME, IP_SOC)
+                data_rna = get_model_attributes_by_pcap_data(list_pcap, all_flow_data, IP_SOC)
                 
                 #Invalid data return in list
                 if not data_rna:
@@ -132,7 +125,6 @@ def main():
                 id_alert = queries.insert_alert(id_pcap, data_rna, label)
                 queries.update_status_captures(id_pcap, "PROCESS")
                 
-                INDEX += 1
             except Exception as e:
                 error_description = str(e)[0:254]
                 print("Error Capture", id_pcap,":",str(e))

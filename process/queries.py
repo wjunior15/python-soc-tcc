@@ -119,22 +119,20 @@ def insert_alert(in_id, dt_row, in_alert):
     
     id_pcap = in_id
     label = in_alert
-    init_win_fwd = dt_row["Init_Win_bytes_forward"]
+    mean_win_fwd = dt_row["Mean Win Fwd"]
     ack_count = dt_row["ACK Flag Count"]
+    syn_count = dt_row["SYN Flag Count"]
     fwd_pck = dt_row["Fwd Packets/s"]
-    flw_pck = dt_row["Flow Packets/s"]
+    bwd_pck = dt_row["Bwd Packets/s"]
     iat_max = dt_row["Flow IAT Max"]
     iat_mean = dt_row["Flow IAT Mean"]
     iat_min = dt_row["Flow IAT Min"]
-    flw_duration = dt_row["Flow Duration"]
-    if np.isnan(flw_duration):
-        flw_duration = 0
-    init_win_bwd = dt_row["Init_Win_bytes_backward"]
-    sub_bwd = dt_row["Subflow Bwd Bytes"]
+    mean_win_bwd = dt_row["Mean Win Bwd"]
+    ports_number = dt_row["Ports Number"]
     
     insert_query = f"""
-                INSERT INTO alerts (id_pcap, label, init_win_fwd, ack_count, fwd_pck, flw_pck, iat_max, iat_min, flw_duration, init_win_bwd, sub_bwd, iat_mean, status)
-                VALUES ({id_pcap}, '{label}', {init_win_fwd}, {ack_count}, {fwd_pck}, {flw_pck}, {iat_max}, {iat_min}, {flw_duration}, {init_win_bwd}, {sub_bwd}, {iat_mean}, 'NEW')
+                INSERT INTO alerts (id_pcap, label, mean_win_fwd, ack_count, syn_count, fwd_pck, bwd_pck, iat_max, iat_min, mean_win_bwd, ports_number, iat_mean, status)
+                VALUES ({id_pcap}, '{label}', {mean_win_fwd}, {ack_count}, {syn_count}, {fwd_pck}, {bwd_pck}, {iat_max}, {iat_min}, {mean_win_bwd}, {ports_number}, {iat_mean}, 'NEW')
                 RETURNING id_alert;
                 """
     conn = conn_db()
@@ -170,7 +168,8 @@ def get_captures_by_ips(in_dst, in_src):
             str_query = f"""
                 SELECT *
                 FROM captures
-                WHERE ip_dst IN ('{in_dst}','{in_src}') AND ip_src IN ('{in_dst}','{in_src}');
+                WHERE ip_dst IN ('{in_dst}','{in_src}') AND ip_src IN ('{in_dst}','{in_src}')
+                LIMIT 10000;
                 """
             cursor = conn.cursor()
             cursor.execute(str_query)
@@ -201,15 +200,23 @@ def get_new_capture():
     if conn:
         try:
             str_query = f"""
-                SELECT * FROM captures
-                WHERE cap_status = 'NEW'
-                ORDER BY id_pcap ASC
-                LIMIT 1
-                """
+                            UPDATE captures
+                            SET cap_status = 'RUNNING'
+                            WHERE id_pcap = (
+                                SELECT id_pcap
+                                FROM captures
+                                WHERE cap_status = 'NEW'
+                                ORDER BY id_pcap ASC
+                                LIMIT 1
+                                FOR UPDATE SKIP LOCKED
+                            )
+                            RETURNING *;
+                        """
             cursor = conn.cursor()
             cursor.execute(str_query)
             tpl_data = cursor.fetchall()
             cursor.close()
+            conn.commit()
             conn_db(conn)
                         
             out_dict = convert_tuple_to_dict(tpl_data)
@@ -230,9 +237,12 @@ def insert_error(in_process, in_description):
     Returns:
         id_error (int): id do erro criado
     """
+    
+    description = in_description.replace("'","")
+    
     insert_query = f"""
-                INSERT INTO alerts (process_name, description)
-                VALUES ('{in_process}', '{in_description}')
+                INSERT INTO errors (process_name, description)
+                VALUES ('{in_process}', '{description}')
                 RETURNING id_error;
                 """
     conn = conn_db()
