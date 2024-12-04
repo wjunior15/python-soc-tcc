@@ -1,9 +1,9 @@
 import config
 import queries
 import traceback
-import os
 import model_data as md
 import socket
+import rd_queue
 
 def get_ip_using_socket(hostname):
     try:
@@ -95,11 +95,15 @@ def main():
         
         while 1:
             try:
-                dict_pcap = queries.get_new_capture()
+                id_pcap = rd_queue.get_queue_item("captures")
+                if not id_pcap:
+                    continue
+                
+                dict_pcap = queries.get_new_capture(id_pcap)
                 if not dict_pcap:
                     continue
                 
-                id_pcap = dict_pcap["ID"]
+                queries.update_status_captures(id_pcap, "RUNNING")
                 
                 ip_src = dict_pcap["IP Source"]
                 ip_dst = dict_pcap["IP Destination"]

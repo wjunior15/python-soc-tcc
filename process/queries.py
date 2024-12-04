@@ -185,12 +185,11 @@ def get_captures_by_ips(in_dst, in_src):
             print("Erro ao extrair dados com lista de atributos:",str(e))
             conn_db(conn)
             
-def get_new_capture():
+def get_new_capture(in_id):
     """Função que busca por capturas de trafego entre dois ips
     
     Args:
-        in_dst (string): ip da máquina dada como destino da conexão
-        in_src (string): ip da máquina dada como fonte da conexão
+        in_id_pcap (string): id do pcap que será buscado
     
     Returns:
         out_dt (datatable): dados de todas as conexões correspondentes neste fluxo
@@ -200,17 +199,11 @@ def get_new_capture():
     if conn:
         try:
             str_query = f"""
-                            UPDATE captures
-                            SET cap_status = 'RUNNING'
-                            WHERE id_pcap = (
-                                SELECT id_pcap
-                                FROM captures
-                                WHERE cap_status = 'NEW'
-                                ORDER BY id_pcap ASC
-                                LIMIT 1
-                                FOR UPDATE SKIP LOCKED
-                            )
-                            RETURNING *;
+                            SELECT *
+                            FROM captures
+                            WHERE id_pcap = {in_id}
+                            ORDER BY id_pcap ASC
+                            LIMIT 1
                         """
             cursor = conn.cursor()
             cursor.execute(str_query)
@@ -220,7 +213,6 @@ def get_new_capture():
             conn_db(conn)
                         
             out_dict = convert_tuple_to_dict(tpl_data)
-            print("Dados convertidos com sucesso!")
             return out_dict
             
         except Exception as e:

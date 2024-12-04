@@ -5,6 +5,7 @@ import pyshark
 import traceback
 import os
 import socket
+import rd_queue
 
 def get_ip_using_socket(hostname):
     try:
@@ -50,6 +51,7 @@ def main():
         queries.create_db()
         
         ip_db = str(get_ip_using_socket("postgres"))
+        ip_redis = str(get_ip_using_socket("redis2"))
         ip_metasploit = str(get_ip_using_socket("metasploit"))
         print(" -- IP Banco de Dados",ip_db)
         
@@ -64,13 +66,14 @@ def main():
                 
                 if list_pcap:
                     #No include in db if this connection is between db and soc
-                    if ip_src == ip_db or ip_dst == ip_db:
+                    if ip_src in [ip_db, ip_redis] or ip_dst in [ip_db, ip_redis]:
                         continue
                     label = "BENNING"
                     if ip_src == ip_metasploit or ip_dst == ip_metasploit:
                         label = "MALIGN"
                         
                     id_pcap = queries.insert_pcap_data(list_pcap, label)
+                    rd_queue.insert_queue_item("captures",id_pcap)
 
         
     except Exception as e:
