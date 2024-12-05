@@ -62,7 +62,7 @@ def main():
             if 'IP' in pcap and 'TCP' in pcap:
                 list_pcap = get_pcap_data(pcap)
                 ip_src = str(list_pcap[0])
-                ip_dst = str(list_pcap[1])
+                ip_dst = str(list_pcap[1]) 
                 
                 if list_pcap:
                     #No include in db if this connection is between db and soc

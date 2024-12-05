@@ -10,7 +10,7 @@ app_port = str(os.getenv("APP_PORT"))
 url = "http://"+app_host+":"+app_port+"/sum"
 print("URL definida:",url)
 
-value_a = str(random.randint(0,10))
+value_a = str(random.randint(0,2))
 payload = json.dumps({
   "a": value_a
 })
