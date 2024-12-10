@@ -114,3 +114,37 @@ def convert_tuple_to_dict(in_tuple):
         return dict_data
         
     return out_dict
+
+def insert_error(in_process, in_description):
+    """Função que insere dados de erros no banco
+    
+    Args:
+        in_process (string): nome do processo que está sendo executado
+        in_description (string): descrição reduzida do erro
+        
+    Returns:
+        id_error (int): id do erro criado
+    """
+    
+    description = in_description.replace("'","")[0:254]
+    
+    insert_query = f"""
+                INSERT INTO errors (process_name, description)
+                VALUES ('{in_process}', '{description}')
+                RETURNING id_error;
+                """
+    conn = conn_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute(insert_query)
+            id_error = cursor.fetchall()[0][0]
+            conn.commit()
+            cursor.close()
+            conn_db(conn)
+            print("Inserção do ERRO", id_error,"realizada com sucesso!")
+            return id_error
+        
+        except Exception as e:
+            conn_db(conn)
+            print("Erro ao inserir ERRO:", str(e))

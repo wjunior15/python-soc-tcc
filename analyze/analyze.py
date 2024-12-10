@@ -6,6 +6,7 @@ import config
 import queries
 import os
 import pickle
+import traceback
 
 def get_model_and_encoder():
     """
@@ -25,7 +26,8 @@ def get_model_and_encoder():
             scaler_path = config.PROJECT_PATH+config.SCALER_PATH.replace('/','\\')
             model_path = config.PROJECT_PATH+config.MODEL_PATH.replace('/','\\')
     
-    out_scaler = pickle.load(open(scaler_path, 'rb'))
+    #out_scaler = pickle.load(open(scaler_path, 'rb'))
+    out_scaler = None
     out_model = keras.models.load_model(model_path)
     print(" --- Modelo TF e Scaler importados com sucesso!")
     
@@ -42,6 +44,7 @@ def get_predict_value(in_model, in_array):
     prediction = in_model.predict(in_array)
     prediction_argmax = np.argmax(prediction, axis=1)
     label = "BENIGN"
+    print("PREDICTED VALUE:",prediction_argmax)
     if prediction_argmax[0] == 1:
         label = "MALIGN"
     return label
@@ -55,22 +58,27 @@ def main():
         while 1:
             
             dict_data = queries.get_new_alert()
+            if not dict_data:
+                continue
+            
             id_alert = dict_data['ID']
             real_label = dict_data['Label']
             queries.update_alert_status(id_alert, "RUNNING")
             
             model_data = get_model_data_format(dict_data, scaler)
+            print("MODEL DATA:",model_data)
             predicted_label = get_predict_value(model, model_data)
             print("PREDICTED LABEL:",predicted_label," -- X -- REAL LABEL:",real_label)
             queries.update_alert_status(id_alert, predicted_label)
         
     except Exception as e:
         print("Erro na análise:", str(e))
+        queries.insert_error("ANALYZE", str(e))
         print("     ------- Traceback Completo do ERRO -------")
+        traceback.print_exc()
     
     except KeyboardInterrupt:
         print(" --- EXECUÇÃO INTERROMPIDA PELO USUÁRIO ---")
 
 if __name__ == '__main__':
     main()
-    
