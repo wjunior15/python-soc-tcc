@@ -68,7 +68,7 @@ def main():
                     #No include in db if this connection is between db and soc
                     if ip_src in [ip_db, ip_redis] or ip_dst in [ip_db, ip_redis]:
                         continue
-                    label = "BENNING"
+                    label = "BENIGN"
                     if ip_src == ip_metasploit or ip_dst == ip_metasploit:
                         label = "MALIGN"
                         
