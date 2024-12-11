@@ -46,46 +46,43 @@ def get_model_attributes_by_pcap_data(pcap, raw_data, ip_soc):
     #Mean Win Bytes Fwd - Apenas Flag SYN
     init_win_fwd = md.get_mean_win_size(fwd_pck)
     print("Mean Win Fwd",init_win_fwd)
+          
+    #Mean Win Bytes Bwd - Flag SYN e ACK
+    init_win_bwd = md.get_mean_win_size(bwd_pck)
+    print("Mean Win Bwd", init_win_bwd)
     
-    #Success in Get Init Window Bytes Fwd
-    if init_win_fwd:        
-        #Mean Win Bytes Bwd - Flag SYN e ACK
-        init_win_bwd = md.get_mean_win_size(bwd_pck)
-        print("Mean Win Bwd", init_win_bwd)
-        
-        #Fwd Packets/s
-        fwd_pkg_s = md.get_packets(fwd_pck)
-        print("Fwd Packets/s",fwd_pkg_s)
-        
-        #Bwd Packets/s
-        bwd_pkg_s = md.get_packets(bwd_pck)
-        print("Bwd Packets/s",bwd_pkg_s)
-        
-        #IAT
-        iat_max, iat_min, iat_mean = md.get_iat(raw_data)
-        print("IAT Max",iat_max,"| IAT Médio", iat_mean,"| IAT Minímo", iat_min)
-        
-        #Ports Number Fwd
-        ports_number_fwd = md.get_ports_number(fwd_pck)
-        print("Ports Number",ports_number_fwd)
-        
-        data_rna = {"Mean Win Fwd":init_win_fwd,
-                    "ACK Flag Count":ack_flag,
-                    "SYN Flag Count":syn_flag,
-                    "Fwd Packets/s":fwd_pkg_s,
-                    "Bwd Packets/s":bwd_pkg_s,
-                    "Flow IAT Max":iat_max,
-                    "Flow IAT Min":iat_min,
-                    "Mean Win Bwd":init_win_bwd,
-                    "Flow IAT Mean":iat_mean,
-                    "Ports Number":ports_number_fwd,
-                    "Label":None,
-                    "Source":ip_src,
-                    "Destiny":ip_dst,
-                    "Timestamp":pcap[4]}
-        
-        return data_rna
-    return None
+    #Fwd Packets/s
+    fwd_pkg_s = md.get_packets(fwd_pck)
+    print("Fwd Packets/s",fwd_pkg_s)
+    
+    #Bwd Packets/s
+    bwd_pkg_s = md.get_packets(bwd_pck)
+    print("Bwd Packets/s",bwd_pkg_s)
+    
+    #IAT
+    iat_max, iat_min, iat_mean = md.get_iat(raw_data)
+    print("IAT Max",iat_max,"| IAT Médio", iat_mean,"| IAT Minímo", iat_min)
+    
+    #Ports Number Fwd
+    ports_number_fwd = md.get_ports_number(fwd_pck)
+    print("Ports Number",ports_number_fwd)
+    
+    data_rna = {"Mean Win Fwd":init_win_fwd,
+                "ACK Flag Count":ack_flag,
+                "SYN Flag Count":syn_flag,
+                "Fwd Packets/s":fwd_pkg_s,
+                "Bwd Packets/s":bwd_pkg_s,
+                "Flow IAT Max":iat_max,
+                "Flow IAT Min":iat_min,
+                "Mean Win Bwd":init_win_bwd,
+                "Flow IAT Mean":iat_mean,
+                "Ports Number":ports_number_fwd,
+                "Label":None,
+                "Source":ip_src,
+                "Destiny":ip_dst,
+                "Timestamp":pcap[4]}
+    
+    return data_rna
 
 def main():
     try:        

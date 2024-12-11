@@ -8,6 +8,7 @@ RUN apt-get update && apt-get upgrade -y && \
     wget \
     vim \
     nano \
+    hping3 \
     gnupg \
     git && \
     apt-get clean && rm -rf /var/lib/apt/lists/*

@@ -33,5 +33,5 @@ while 1:
   except Exception as e:
     print(e)
     
-  loop_interval = random.randint(2,10)  
+  loop_interval = random.randint(0,1)  
   time.sleep(loop_interval)

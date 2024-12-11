@@ -26,8 +26,11 @@ def get_model_and_encoder():
             scaler_path = config.PROJECT_PATH+config.SCALER_PATH.replace('/','\\')
             model_path = config.PROJECT_PATH+config.MODEL_PATH.replace('/','\\')
     
-    #out_scaler = pickle.load(open(scaler_path, 'rb'))
+    
     out_scaler = None
+    #if config.BOOL_USE_SCALER:
+        #out_scaler = pickle.load(open(scaler_path, 'rb'))
+    
     out_model = keras.models.load_model(model_path)
     print(" --- Modelo TF e Scaler importados com sucesso!")
     
