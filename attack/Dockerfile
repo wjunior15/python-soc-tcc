@@ -9,6 +9,7 @@ RUN apt-get update && apt-get upgrade -y && \
     vim \
     nano \
     hping3 \
+    hydra \
     gnupg \
     git && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
