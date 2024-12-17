@@ -14,3 +14,4 @@ analyse_data.ipynb
 .env
 docker-compose.yml
 /db_create/
+rockyou.txt
