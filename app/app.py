@@ -35,7 +35,7 @@ def sum():
         value_b = int(redis_client.get('value'))
         total_value = int(in_data.get('a'))+value_b
         redis_client.set('value', total_value)
-        return jsonify({'message':'operação realizada',
+        return jsonify({'message':'operacao realizada',
                         'valor total':total_value})
         
     return jsonify({'message':'dados faltantes'})

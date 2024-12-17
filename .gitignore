@@ -15,3 +15,7 @@ analyse_data.ipynb
 docker-compose.yml
 /db_create/
 rockyou.txt
+/attack/rockyou.txt
+attack/rockyou.txt
+rockyou.*
+**/rockyou.txt
