@@ -2,6 +2,8 @@ FROM ubuntu:latest
 
 LABEL maintainer="wellingtonresende15@gmail.com"
 
+COPY . .
+
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y \
     curl \

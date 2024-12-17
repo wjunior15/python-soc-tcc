@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
 import redis
+import logging
 
 app_host = str(os.getenv("APP_HOST"))
 app_port = int(os.getenv("APP_PORT"))
@@ -9,10 +10,15 @@ redis_host = str(os.getenv("REDIS_HOST"))
 redis_port = int(os.getenv("REDIS_PORT"))
 
 APP_USER = 'admin'
-APP_PASSWORD = 'senha123'
+APP_PASSWORD = 'monkey'
 
 app = Flask(__name__)
 CORS(app)
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
+logger = app.logger
 
 redis_client = redis.StrictRedis(host=redis_host, port=redis_port, decode_responses=True)
 redis_client.set('value',0)
@@ -39,11 +45,12 @@ def login():
     # Get username and password from the request
     username = request.form.get('username')
     password = request.form.get('password')
+    logger.info(f"Dados de login Recebidos: {username}:{password}")
 
     # Check if the username and password are correct
     if username == APP_USER and password == APP_PASSWORD:
         return jsonify({"status": "success", "message": "Login successful!"}), 200
-    else:
-        return jsonify({"status": "failure", "message": "Invalid credentials."}), 401
+    
+    return jsonify({"status": "failure", "message": "Invalid credentials"}), 401
 
 app.run(host=app_host, port=app_port, debug=True)
