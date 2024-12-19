@@ -20,4 +20,6 @@ RUN curl https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/conf
     chmod 755 msfinstall && \
     ./msfinstall
 
+RUN wget https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt
+
 CMD [ "bash" ]
