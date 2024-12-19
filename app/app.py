@@ -10,7 +10,7 @@ redis_host = str(os.getenv("REDIS_HOST"))
 redis_port = int(os.getenv("REDIS_PORT"))
 
 APP_USER = 'admin'
-APP_PASSWORD = 'monkey'
+APP_PASSWORD = 'jessica'
 
 app = Flask(__name__)
 CORS(app)

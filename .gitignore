@@ -19,3 +19,4 @@ rockyou.txt
 attack/rockyou.txt
 rockyou.*
 **/rockyou.txt
+attack\rockyou.txt
