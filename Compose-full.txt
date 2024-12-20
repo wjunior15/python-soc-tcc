@@ -135,7 +135,7 @@ services:
     
     restart: unless-stopped
 
-  metasploit:
+  attack:
     build:
       context: ./attack
       dockerfile: Dockerfile
@@ -170,11 +170,11 @@ services:
       - ./process:/usr/src/process
 
     deploy:
-      replicas: 4
+      replicas: 6
       resources:
         limits:
           cpus: '1'
-          memory: '300M'
+          memory: '200M'
 
     environment:
       - DB_HOST=postgres

@@ -12,6 +12,7 @@ RUN apt-get update && apt-get upgrade -y && \
     nano \
     hping3 \
     hydra \
+    nmap \
     gnupg \
     git && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
