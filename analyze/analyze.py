@@ -5,8 +5,9 @@ import tensorflow as tf
 import config
 import queries
 import os
-import pickle
+#import pickle
 import traceback
+import rd_queue
 
 def get_model_and_encoder():
     """
@@ -38,7 +39,7 @@ def get_model_and_encoder():
     
 def get_model_data_format(in_dict_data, in_scaler):
     dt_data = pd.DataFrame([in_dict_data])
-    dt_data.drop(['ID', 'ID PCAP', 'Label', 'Status'], axis=1, inplace=True)
+    dt_data.drop(['ID', 'ID PCAP', 'Label', 'Status', 'Mean Win Bwd', 'Bwd Packets'], axis=1, inplace=True)
 
     np_data = dt_data.to_numpy()
     return np_data
@@ -60,7 +61,11 @@ def main():
         
         while 1:
             
-            dict_data = queries.get_new_alert()
+            id_alert = rd_queue.get_queue_item("alerts")
+            if not id_alert:
+                continue
+            
+            dict_data = queries.get_new_alert(id_alert)
             if not dict_data:
                 continue
             

@@ -124,6 +124,7 @@ def main():
                     continue
 
                 id_alert = queries.insert_alert(id_pcap, data_rna, label)
+                rd_queue.insert_queue_item("alerts", id_alert)
                 queries.update_status_captures(id_pcap, "PROCESS")
                 
             except Exception as e:

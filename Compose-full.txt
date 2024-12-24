@@ -135,7 +135,7 @@ services:
     
     restart: unless-stopped
 
-  attack:
+  metasploit:
     build:
       context: ./attack
       dockerfile: Dockerfile

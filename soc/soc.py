@@ -81,6 +81,9 @@ def main():
         print("Erro na captura:", str(e))
         print("     ------- Traceback Completo do ERRO -------")
         traceback.print_exc()
+        
+        error_description = str(e)[0:254]
+        id_error = queries.insert_error("SOC", error_description)
     
     except KeyboardInterrupt:
         print(" --- EXECUÇÃO INTERROMPIDA PELO USUÁRIO ---")

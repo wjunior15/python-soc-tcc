@@ -20,7 +20,7 @@ def conn_db(conn = None):
         print("Erro ao tratar conexão com banco de dados:",e)
 
 
-def get_new_alert():
+def get_new_alert(in_alert_id):
     """Função que busca por alerts pendentes de processamento
     
     Args:
@@ -35,8 +35,7 @@ def get_new_alert():
             str_query = f"""
                             SELECT *
                             FROM alerts
-                            WHERE status = 'NEW'
-                            ORDER BY id_alert ASC
+                            WHERE id_alert = {in_alert_id}
                             LIMIT 1
                         """
             cursor = conn.cursor()
@@ -105,8 +104,8 @@ def convert_tuple_to_dict(in_tuple):
                         "Fwd Packets":np.round(float(item[7]),2),
                         "Bwd Packets":np.round(float(item[8]),2),
                         "IAT Max":np.round(float(item[9]),2),
-                        "IAT Min":np.round(float(item[10]),2),
                         "IAT Mean":np.round(float(item[11]),2),
+                        "IAT Min":np.round(float(item[10]),2),
                         "Ports Number":int(item[12]),
                         "Status":item[13]
                     }
