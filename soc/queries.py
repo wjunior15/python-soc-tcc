@@ -26,9 +26,7 @@ def create_db():
             cursor = conn.cursor()
             cursor.execute(
             f"""
-                DROP TABLE IF EXISTS alerts, captures, errors;
-
-                CREATE TABLE captures(
+                CREATE TABLE IF NOT EXISTS captures(
                     id_pcap SERIAL,
                     ip_src varchar(50) NOT NULL,
                     ip_dst varchar(50) NOT NULL,
@@ -43,7 +41,7 @@ def create_db():
                     CONSTRAINT PK_pcap PRIMARY KEY (id_pcap)
                 );
 
-                CREATE TABLE alerts(
+                CREATE TABLE IF NOT EXISTS alerts(
                     id_alert SERIAL,
                     id_pcap integer,
                     label varchar(50) NOT NULL,
@@ -62,7 +60,7 @@ def create_db():
                     CONSTRAINT FK_alert_pcap FOREIGN KEY (id_pcap) REFERENCES captures(id_pcap)
                 );
                 
-                CREATE TABLE errors(
+                CREATE TABLE IF NOT EXISTS errors(
                     id_error SERIAL,
                     process_name VARCHAR(50) NOT NULL,
                     description VARCHAR (255) NOT NULL,
@@ -100,8 +98,13 @@ def insert_pcap_data(in_pcap, in_label):
             print("Inserção do PCAP",id_pcap,"realizada com sucesso!")
             return id_pcap
         except Exception as e:
-            print("Erro ao inserir pcap:",str(e))
+            str_except = str(e)
+            print("Erro ao inserir pcap:",str_except)
             conn_db(conn)
+            
+            if str_except.find("relation \"captures\" does not exist") > -1:
+                create_db()
+            
             
 def insert_error(in_process, in_description):
     """Função que insere dados de erros no banco
@@ -113,9 +116,12 @@ def insert_error(in_process, in_description):
     Returns:
         id_error (int): id do erro criado
     """
+    
+    description = in_description.replace("'","")
+    
     insert_query = f"""
                 INSERT INTO alerts (process_name, description)
-                VALUES ('{in_process}', '{in_description}')
+                VALUES ('{in_process}', '{description}')
                 RETURNING id_error;
                 """
     conn = conn_db()

@@ -41,7 +41,7 @@ def get_model_attributes_by_pcap_data(pcap, raw_data, ip_soc):
     print("IP Destination", ip_dst)
     #Dados de Fwd e Bwd utilizados na obtenção da variáveis do modelo
     fwd_pck = raw_data.query('`IP Source` == @ip_src & `IP Destination` == @ip_dst')
-    bwd_pck = raw_data.query('`IP Source` == @ip_src & `IP Destination` == @ip_dst')
+    bwd_pck = raw_data.query('`IP Source` == @ip_dst & `IP Destination` == @ip_src')
     
     #Mean Win Bytes Fwd - Apenas Flag SYN
     init_win_fwd = md.get_mean_win_size(fwd_pck)
@@ -124,6 +124,7 @@ def main():
                     continue
 
                 id_alert = queries.insert_alert(id_pcap, data_rna, label)
+                rd_queue.insert_queue_item("alerts", id_alert)
                 queries.update_status_captures(id_pcap, "PROCESS")
                 
             except Exception as e:

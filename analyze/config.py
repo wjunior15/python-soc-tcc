@@ -8,7 +8,7 @@ if SYSTEM_NAME == 'Windows':
     dotenv.load_dotenv()
     
 PROJECT_PATH = os.getcwd()
-MODEL_PATH = "/models/model_portscan.keras"
+MODEL_PATH = "/models/model_tf.keras"
 SCALER_PATH = "/encoders/LabelEncoder.joblib"
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
