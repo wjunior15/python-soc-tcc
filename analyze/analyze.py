@@ -39,7 +39,7 @@ def get_model_and_encoder():
     
 def get_model_data_format(in_dict_data, in_scaler):
     dt_data = pd.DataFrame([in_dict_data])
-    dt_data.drop(['ID', 'ID PCAP', 'Label', 'Status', 'Mean Win Bwd', 'Bwd Packets'], axis=1, inplace=True)
+    dt_data.drop(['ID', 'ID PCAP', 'Label', 'Status'], axis=1, inplace=True)
 
     np_data = dt_data.to_numpy()
     return np_data
