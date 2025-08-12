@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 LABEL MAINTAINER="Wellington Araujo <wellingtonresende15@gmail.com>"
 
 ENV GROUP_ID=1000 \
