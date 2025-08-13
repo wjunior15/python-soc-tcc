@@ -1,0 +1,239 @@
+services:
+  postgres:
+    image: bitnami/postgresql:latest
+    container_name: postgres
+    ports:
+      - '5000:5432'
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: '1500M'
+
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+    volumes:
+      - fazenda_pg_data:/bitnami/postgresql
+    networks:
+      - backend
+
+
+  soc:
+    build:
+      context: ./soc
+
+    container_name: soc
+
+    volumes:
+      - ./app:/usr/src/app
+      - ./soc:/usr/src/soc
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: '1000M'
+
+    ports:
+      - '8000:8000'
+
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - APP_HOST=${APP_HOST}
+      - APP_PORT=${APP_PORT}
+      - REDIS_HOST=redis1
+      - REDIS_PORT=6379
+    
+    depends_on:
+      - postgres
+      - redis1
+      - redis2
+
+    privileged: true
+
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+    networks:
+      - backend
+      - frontend
+    
+    restart: unless-stopped
+
+  redis1:
+    image: bitnami/redis:latest
+    container_name: redis1
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379:6379'
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: '300M'
+
+    volumes:
+      - polls_redis1_data:/bitnami/redis/data
+    networks:
+      - backend
+
+  redis2:
+    image: bitnami/redis:latest
+    container_name: redis2
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6380:6379'
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: '300M'
+
+    volumes:
+      - polls_redis2_data:/bitnami/redis/data
+    networks:
+      - backend
+
+  benign:
+    build:
+      context: ./benign
+
+    container_name: benign
+
+    volumes:
+      - ./benign:/usr/src/benign
+
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1'
+          memory: '100M'
+
+    environment:
+      - APP_HOST=soc
+      - APP_PORT=${APP_PORT}
+    
+    depends_on:
+      - soc
+      - redis1
+
+    networks:
+      - frontend
+    
+    restart: unless-stopped
+
+  metasploit:
+    build:
+      context: ./attack
+      dockerfile: Dockerfile
+    container_name: metasploit
+    stdin_open: true
+    tty: true
+
+    volumes:
+      - ./attack:/usr/src/attack
+
+    environment:
+      - APP_HOST=soc
+      - APP_PORT=8000
+
+    deploy:
+      resources:
+        limits:
+          cpus: '3'
+          memory: '1500M'
+
+    networks:
+      - frontend
+
+    depends_on:
+      - soc
+
+  process:
+    build:
+      context: ./process
+
+    volumes:
+      - ./process:/usr/src/process
+
+    deploy:
+      replicas: 4
+      resources:
+        limits:
+          cpus: '1'
+          memory: '200M'
+
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis2
+      - REDIS_PORT=6379
+    
+    depends_on:
+      - postgres
+      - soc
+      - redis2
+
+    networks:
+      - backend
+
+    restart: unless-stopped
+
+  analyze:
+    build:
+      context: ./analyze
+
+    volumes:
+      - ./analyze:/usr/src/analyze
+
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '1'
+          memory: '1000M'
+
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis2
+      - REDIS_PORT=6379
+    
+    depends_on:
+      - postgres
+      - soc
+
+    networks:
+      - backend
+
+    restart: unless-stopped
+
+volumes:
+  fazenda_pg_data:
+  polls_redis1_data:
+  polls_redis2_data:
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
